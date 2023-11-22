@@ -19,6 +19,9 @@ GPIO.setmode(GPIO.BCM)
 GPIO.setup(TRIG_PIN, GPIO.OUT)
 GPIO.setup(ECHO_PIN, GPIO.IN)
 
+# 이전 데이터 전송 여부를 추적하는 변수
+data_sent = False
+
 def get_distance():
     # 초음파 신호 발생
     GPIO.output(TRIG_PIN, True)
@@ -46,8 +49,8 @@ try:
         distance = get_distance()
         print(f"거리: {distance:.2f} cm")
 
-        # 거리가 5cm 이하일 때 API 요청 보내기
-        if distance <= 5:
+        # 거리가 5cm 이하이고 이전에 데이터를 전송하지 않았을 때
+        if distance <= 5 and not data_sent:
             test_model = TestModel()
             test_model.name = "test"
             test_model.password = "1234"
@@ -59,10 +62,18 @@ try:
             response.raise_for_status()
             print("응답:", response.text)
 
+            # 데이터를 전송했음을 표시
+            data_sent = True
+
+        # 거리가 5cm 이상이고 이전에 데이터를 전송했을 때
+        elif distance > 5 and data_sent:
+            # 데이터를 다시 전송할 수 있도록 초기화
+            data_sent = False
+
         time.sleep(1)  # 1초 대기
 
-except Exception as e:
-    print(f"에러 발생: {e}")
+except KeyboardInterrupt:
+    pass
 
 finally:
     GPIO.cleanup()  # GPIO 설정 초기화

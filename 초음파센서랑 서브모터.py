@@ -87,8 +87,8 @@ try:
             # 데이터를 전송했음을 표시
             data_sent = True
 
-            # 서버에서 받은 값이 "test, 4567"인 경우 서보 모터 동작
-            if "test, 4567" in response.text:
+             # 서버에서 받은 값이 "4567"인 경우 서보 모터 동작
+            if "4567" in response.text:
                 control_servo_motor()
 
         # 거리가 5cm 이상이고 이전에 데이터를 전송했을 때

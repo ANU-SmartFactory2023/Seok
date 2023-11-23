@@ -21,22 +21,24 @@ GPIO.setup(TRIG_PIN, GPIO.OUT)
 GPIO.setup(ECHO_PIN, GPIO.IN)
 GPIO.setup(SERVO_PIN, GPIO.OUT)
 
+# 서보 모터 PWM 설정
+servo_pwm = GPIO.PWM(SERVO_PIN, 50)  # 주파수 50Hz
+servo_pwm.start(2.5)  # 초기 위치는 2.5%의 듀티 사이클 (0도)
+
 # 이전 데이터 전송 여부를 추적하는 변수
 data_sent = False
 
 # 서보 모터를 제어하기 위한 함수
 def control_servo_motor():
-    p = GPIO.PWM(SERVO_PIN, 50)  # PWM 주파수를 50Hz로 설정
-    p.start(2.5)  # 초기 위치는 2.5%의 듀티 사이클 (0도)
-
     try:
         print("서보 모터 동작 중...")
-        p.ChangeDutyCycle(7.5)  # 180도 회전을 위한 듀티 사이클 설정 (7.5%)
+        servo_pwm.ChangeDutyCycle(7.5)  # 180도 회전을 위한 듀티 사이클 설정 (7.5%)
         time.sleep(1)  # 동작 지속 시간 (조절 가능)
     except Exception as e:
         print(f"서보 모터 동작 중 오류 발생: {e}")
     finally:
-        p.stop()  # PWM 정지
+        servo_pwm.ChangeDutyCycle(2.5)  # 초기 위치로 복귀하는 듀티 사이클 설정 (0도)
+        time.sleep(1)  # 동작 지속 시간 (조절 가능)
 
 # 초음파 센서로부터 거리를 측정하기 위한 함수
 def get_distance():
@@ -46,6 +48,9 @@ def get_distance():
     GPIO.output(TRIG_PIN, False)
 
     # 초음파 신호 수신 시간 측정
+    pulse_start = time.time()
+    pulse_end = time.time()
+
     while GPIO.input(ECHO_PIN) == 0:
         pulse_start = time.time()
 
@@ -88,8 +93,8 @@ try:
 
         # 거리가 5cm 이상이고 이전에 데이터를 전송했을 때
         elif distance > 5 and data_sent:
-            # 데이터를 다시 전송할 수 있도록 초기화
-            data_sent = False
+            # 데이터를 다시 전송
+             data_sent = False
 
         time.sleep(1)  # 1초 대기
 

@@ -14,7 +14,7 @@ pwm = GPIO.PWM(SERVO_PIN, 50)  # 주파수 50Hz 설정
 try:
     # GPIO 17 핀에 HIGH 신호 출력 (릴레이 모듈에 전원 공급)
     GPIO.output(RELAY_PIN, GPIO.HIGH)
-    time.sleep(3)  # 3초 동안 대기
+    time.sleep(1)  # 3초 동안 대기
 
     pwm.start(2.5)  # 초기 위치는 2.5%의 듀티 사이클 (0도)
 

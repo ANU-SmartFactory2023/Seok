@@ -1,10 +1,10 @@
 import time
 import logging
-from ultrasonic2 import UltrasonicSensor
-from lightsensor import LightSensor
-from ir_sensor import InfraredSensor
-from relay2 import RelayModule
-from photo import ImageCV
+from ultrasonicSensor import UltrasonicSensor
+from lightSensor import LightSensor
+from irSensor import InfraredSensor
+from relaySensor import RelayModule
+from imageSensor import ImageCV
 import RPi.GPIO as GPIO
 
 # 로깅 설정
@@ -49,7 +49,7 @@ class Sensor:
     def get_light_sensor(self):
         return self.__light_sensor.measure_light()
 
-    def get_ultra_sensor( self ) :
+    def get_sonic_sensor( self ) :
         return self.__ultrasonic_sensor.measure_distance()  
     
     def get_ir_sensor(self) :

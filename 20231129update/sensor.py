@@ -5,6 +5,7 @@ from lightsensor import LightSensor
 from ir_sensor import InfraredSensor
 from relay2 import RelayModule
 from photo import ImageCV
+import RPi.GPIO as GPIO
 
 # 로깅 설정
 logging.basicConfig(level=logging.INFO)
@@ -38,6 +39,7 @@ class Sensor:
 
     def cleanup_gpio(self):
         # GPIO 정리
+        GPIO.setmode(GPIO.BCM) #BCM모드로 설정
         self.__ultrasonic_sensor.cleanup_gpio()
         self.__light_sensor.cleanup_gpio()
         self.__ir_sensor.cleanup_gpio()

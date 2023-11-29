@@ -1,4 +1,4 @@
-# light_sensor.py
+# lightSensor.py
 import RPi.GPIO as GPIO
 
 class LightSensor:
@@ -22,4 +22,4 @@ class LightSensor:
         :return: 조도 값 (센서 입력값)
         """
         light_level = GPIO.input(self.sensor_pin)
-        return light_level
+        return light_level #0,1

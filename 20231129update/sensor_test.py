@@ -2,46 +2,44 @@ from sensor import Sensor
 import logging
 import time
 
-# 로깅 설정
+# Logging configuration
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Sensor 클래스 초기화
+# Initialize the Sensor class
 sensor = Sensor()
 
 try:
     while True:
-        # 각 센서 값 가져오기
-        light_level = sensor.get_light_sensor()
+        # Get values from each sensor
+        light_intensity = sensor.get_light_sensor()
         distance = sensor.get_ultra_sensor()
         ir_value = sensor.get_ir_sensor()
         relay_module = sensor.get_relay_sensor()
         black_pixel = sensor.get_photo_sensor()
 
-        
-        # 로깅
-        logger.info(f"빛의 강도: {light_level}")
-        logger.info(f"거리: {distance} cm")
-        logger.info(f"적외선 센서 값: {ir_value}")
-        logger.info(f"웹캠 검은 픽셀 수: {black_pixel}")
+        # Logging
+        logger.info(f"Light Intensity: {light_intensity}")
+        logger.info(f"Distance: {distance} cm")
+        logger.info(f"Infrared Sensor Value: {ir_value}")
+        logger.info(f"Webcam Black Pixel Count: {black_pixel}")
 
-
-        # 거리가 5cm 이하이면 릴레이 모듈 작동
+        # Turn on the relay module if the distance is less than or equal to 5cm
         if distance and distance <= 5:
             relay_module.turn_on_relay()
-            logger.info("릴레이 켜짐")
+            logger.info("Relay turned on")
         else:
             relay_module.turn_off_relay()
-            logger.info("릴레이 꺼짐")
+            logger.info("Relay turned off")
 
         time.sleep(1)
 
 except KeyboardInterrupt:
-    logger.info("사용자에 의해 종료")
+    logger.info("Terminated by the user")
 
 except Exception as e:  
-    logger.exception(f"예상치 못한 오류가 발생했습니다: {e}")
+    logger.exception(f"An unexpected error occurred: {e}")
 
 finally:
-    # GPIO 정리
+    # Clean up GPIO
     sensor.cleanup_gpio()

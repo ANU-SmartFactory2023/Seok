@@ -1,4 +1,4 @@
-# ultrasonic_sensor.py
+# ultrasonicSensor.py
 import RPi.GPIO as GPIO
 import time
 
@@ -34,7 +34,7 @@ class UltrasonicSensor:
 
             pulse_duration = pulse_end - pulse_start
             distance = pulse_duration * 17150
-            distance = round(distance, 2)
+            distance = round(distance, 2)#소수점 아래자리 표현
 
             return distance
 

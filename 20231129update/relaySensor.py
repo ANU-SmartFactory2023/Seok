@@ -1,4 +1,4 @@
-# relay_module.py
+# relaySensor.py
 import RPi.GPIO as GPIO
 
 class RelayModule:

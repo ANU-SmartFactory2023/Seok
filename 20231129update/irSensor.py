@@ -1,4 +1,4 @@
-# ir_sensor.py
+# irSensor.py
 import RPi.GPIO as GPIO
 
 class InfraredSensor:

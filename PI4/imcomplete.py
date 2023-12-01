@@ -127,19 +127,16 @@ while running:
         case Step.go_rail_next_1:
             print( Step.go_rail_next_2 )
             motor.doConveyor()        
-            currnet_step = Step.stop_rail_2
-
-        case Step.stop_rail_1:
-            print(Step.stop_rail_2)
-            motor.stopConveyor()
-            current_step = Step.end
+            currnet_step = Step.end_time
 
         case Step.end_time:
             print (Step.end_time)
             server_reply = server_comm.notifyProcessEnd()
             if server_reply == "ok":
                 print("Process completed successfully.")
-            else:
+                motor.stopConveyor()
+                current_step = Step.end
+             else:
                 print("Error:Process completion confirmation failed.")
                 running = False
             

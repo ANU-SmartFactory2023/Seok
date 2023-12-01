@@ -114,14 +114,14 @@ while running:
             elif (end_light == "left"):
                 pass_or_fail = GuideMotorStep.badGrade
             elif (end_light == "right"):
-                pass_or_fail = GuideMotorStep.goodGrade
+                pass_or_fail = GuideMotorStep.goodGrade # 여기까지가 서브모터 2부분
             else:
                 if pass_or_fail == GuideMotorStep.servo_1:
                     print(Step.servo_1)
                 elif(end_light == "false"):
                     pass_or_fail = GuideMotorStep.fail
                 else:
-                    pass_or_fail = GuideMotorStep.good
+                    pass_or_fail = GuideMotorStep.good # 여기까지가 서브모터 1부분
             currnet_step = Step.go_rail_next_1
 
         case Step.go_rail_next_1:

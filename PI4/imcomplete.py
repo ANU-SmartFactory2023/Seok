@@ -39,7 +39,7 @@ class Step( Enum ) :    #각 스텝별 이름, 동사형으로 지을것, 무엇
     fourth_part_process_sleep = 30
     fourth_part_sensor_measure_and_endpost = 40 ##여기서는 4공정 정보를 false,left,right 값을 받고 
     # servo_2 = 50
-    servo_1 = 50
+    # servo_1 = 50
     go_rail_next_1 = 60
     stop_rail_1 = 70
     end_time = 80

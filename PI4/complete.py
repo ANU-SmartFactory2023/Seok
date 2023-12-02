@@ -1,129 +1,134 @@
-#server_communication.py
-import http.client
-import json
+import RPi.GPIO as GPIO
+from enum import Enum
+import os
+from time import sleep
+import sys
+import random
+import sys, os
+from enum import Enum
+sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
+from common.moter import Motor, GuideMotorStep
+from common.sensor import Sensor
+from common.server_communication import ServerComm
 
-#적외선 센서와 2차 센서 역할이 다름으로 모델 추가 및 변경
-from model import SensorModel
-from model import ProcessModel
 
-# 클래스의 메서드에서 첫 번째 매개변수로 self를 사용하는 것은 파이썬의 규칙 중 하나입니다. 
-# self를 사용하여 클래스의 인스턴스 변수 및 메서드에 접근할 수 있다.
-class ServerComm :
-    conn:http.client.HTTPConnection
-    headers = {"Content-type": "application/json", "Accept": "*/*"}
-    
-    #__init__ 설정 메서드에 서버 ip주소 및 포트번호 설정
-    def __init__( self ) :
-        self.conn = http.client.HTTPConnection( '192.168.1.12', 5000 ) # 서버 ip, 포트
 
-    # HTTP 통신 Sensor Post 정의
-    def sensorRequestPost( self, url, s:SensorModel ) :
-        self.conn.request( 'POST', url, json.dumps( s.__dict__ ), self.headers )
-        result = self.conn.getresponse().read().decode()
-        json_object = json.loads( result )       
+# 현재 스크립트 파일의 디렉토리 경로
+#current_path = os.path.dirname(__file__)
+# 외부 폴더의 경로 지정 (예: /home/pi/external_folder)
+#external_path = os.path.join(current_path, '/home/admin/test/common')
+# sys.path에 외부 폴더 경로 추가
+#sys.path.append(external_path)#
 
-        return json_object 
 
-    # HTTP 통신 Process Post 정의
-    def ProcessRequestPost( self, url, p:ProcessModel ) :
-        # p 클래스 변수들을 딕셔너리 형태로 변환 후 전송
-        self.conn.request( 'POST', url, json.dumps( p.__dict__ ), self.headers )
+class Step( Enum ) :    #각 스텝별 이름, 동사형으로 지을것, 무엇을 하는 스텝인지 알 수 있는 네이밍
+     
+    start = 0
+    fourth_part_irsensor_post = 11
+    fourth_part_process_start = 22
+    fourth_part_process_sleep = 33
+    fourth_part_sensor_measure_and_endpost = 44
+    move_servo = 55
+    go_rail_next_1 = 66
+    stop_rail_1 = 77
+    end_time = 88
 
-        # getresponse()를 호출하면 http.client.HTTPResponse 객체 반환
-        # read() 메서드를 호출하여 응답 데이터를 읽고
-        # decode()를 사용하여 해당 데이터를 문자열로 디코딩
-        result = self.conn.getresponse().read().decode()
+pass_or_fail1 = ''
+pass_or_fail2 = ''
 
-        # json.loads 함수를 사용하여 이를 파이썬 객체로 변환한다.
-        json_object = json.loads( result )  
-        
-        # json 안 답변 분리 후 변수 저장 가능
-        msg = json_object[ 'msg' ] 
-        statusCode = json_object[ 'statusCode' ] 
+# GPIO 핀 번호 설정
+LIGHT_SENSOR_PIN = 6
+IR_SENSOR_PIN = 7
+SERVO_MOTOR_1_PIN = 17
+SERVO_MOTOR_2_PIN = 18
 
-        print("Server response:", msg)  # 받은 응답 출력
-        
-        # print("Server response:", json_object)  # 받은 응답 출력
+currnet_step = Step.start   #기본설정
+running = True  
+sensor = Sensor()   #센서 참조
+server_comm = ServerComm()  #서버참조
+svmotor_1 = Motor(SERVO_MOTOR_1_PIN) # 주파수 50Hz
+svmotor_2 = Motor(SERVO_MOTOR_2_PIN)
+motor = Motor # DC모터
 
-        # 서버에서 json 파일 답변 여부를 확인하는 예외 처리
-        # try:
-        #     json_object = json.loads(result)
-        #     return json_object
-        # except json.decoder.JSONDecodeError as e:
-        #     print(f"Error decoding JSON: {e}")
-        #     return None
+while running:
+    print( "running : " + str( running ) )# 디버깅확인용
+    sleep( 0.1 )
+    FOURTH_IR = sensor.get_ir_sensor( IR_SENSOR_PIN )  ##마지막에 활용
+    match current_step :
+        case Step.start: 
+            print( Step.start )
+            svmotor_2.doGuideMotor( GuideMotorStep.stop )
+            svmotor_1.doGuideMotor( GuideMotorStep.stop )
+            #시작하기전에 검사할것들: 통신확인여부, 모터정렬, 센서 검수
+            current_step = Step.fourth_part_irsensor_post #다음스텝으로 이동sd
 
-        return msg
+        case Step.fourth_part_irsensor_post:  
+            print( Step.fourth_part_irsensor_post )
 
-    # HTTP 통신 Get 정의
-    def requestGet( self, url ) :
-        self.conn.request( 'GET', url  )
-        result = self.conn.getresponse().read().decode()
-        json_object = json.loads( result )
+            if( FOURTH_IR == 1 ) :
+                #서버에서 적외선 센서 감지 여부 전송
+                detect_reply = server_comm.confirmationObject(4, FOURTH_IR)
+                # 답변 중 msg 변수에 "ok" 를 확인할 시
+                if( detect_reply == "ok"):
+                    current_step = Step.fourth_part_process_start
 
-        return json_object
-    
-    # 공정 시작 전 제품 도착 여부 전송 (Get)
-    def ready(self) :
-        json_object = self.requestGet( '/pi/sensor/0' )
+        case Step.fourth_part_process_start:  #계산함수 시작조건 - 센서감지
+            print( Step.fourth_part_process_start )
+            start_reply = server_comm.metalWiringStart() 
+            # 조도센서가 임무를 수행   
+            # 답변 중 msg 변수에 "ok" 를 확인할 시
+            if( start_reply == "ok"):
+                current_step = Step.fourth_part_process_sleep
+            elif( start_reply == "fail" ) :
+                current_step = Step.start
 
-        msg = json_object[ 'msg' ]
-        if msg == 'ok':
-            return True
-        else:
-            return False
+        case Step.fourth_part_process_sleep:
+            # 랜덤값 변수 대입 후 딜레이 (제조 시간 구현)
+            print( Step.fourth_part_process_sleep )
+            random_time = random.randint(4, 8)
+            sleep(random_time)
+            # 딜레이(제조)가 다 끝나면
+            current_step = Step.fourth_part_sensor_measure_and_endpost     
 
-    # 1~4 차 제조 공정 전 적외선 센서를 사용해 제품 도착 여부 전송 (Post)
-    def confirmationObject( self, idx, on_off ) :
-        s = SensorModel()
-        
-        # 적외선 센서는 한가지 종류만 있어 "detect" 로 고정
-        s.sensorName = "detect"
-        s.sensorState = on_off
+        case Step.fourth_part_sensor_measure_and_endpost:
+            print( Step.fourth_part_sensor_measure_and_endpost)
+            #조도센서값을 판단
+            light_value = sensor.get_light_sensor()
+            #조도센서 값을 서버에 전송
+            end_light = server_comm.metalWiringEnd(light_value)
+            if(end_light == "fail"):
+                pass_or_fail1 = GuideMotorStep.fail
+                pass_or_fail2 = GuideMotorStep.reset  
+            else:
+                if (end_light == "left"):
+                    pass_or_fail2 = GuideMotorStep.badGrade
+                    pass_or_fail1 = GuideMotorStep.good
+                elif (end_light == "right"):
+                    pass_or_fail2 = GuideMotorStep.goodGrade
+                    pass_or_fail1 = GuideMotorStep.good
 
-        res = self.sensorRequestPost( f'/pi/sensor/{idx}', s )
+            current_step = Step.move_servo
 
-        return res
-    
-    # 각 공정마다 인수를 넣지 않고 간단하게 호출할 수 있도록
-    # 공정마다 매개변수를 통신 클래스에서 먼저 정의하는 방법
+        case Step.move_servo:
+            print(Step.move_servo)
+            svmotor_1.doGuideMotor(pass_or_fail1)
+            svmotor_2.doGuideMotor(pass_or_fail2)  
+            current_step = Step.go_rail_next_1
 
-    # 포토 공정 시작 시간 전송
-    def photoStart( self ):
-        self.__checkProcess( 1, "start", "photo", "0")
-    # 포토 공정 종료 타이밍과 센서값 전송
-    def photoEnd( self, processValue):
-        self.__checkProcess( 1, "end", "photo", processValue)
-    
-    # 식각 공정 시작
-    def etchingStart( self ):
-        self.__checkProcess( 2, "start", "etching", "0")
-    # 식각 공정 종료 
-    def etchingEnd( self, processValue):
-        self.__checkProcess( 2, "end", "etching", processValue)
+        case Step.go_rail_next_1:
+            print(Step.go_rail_next_1)
+            motor.doConveyor()  # 모터를 구동시킴
+            current_step = Step.stop_rail_1
 
-    # 이온 주입 공정 시작 
-    def ionlmplantationStart( self ):
-        self.__checkProcess( 3, "start", "ionlmplantation", "0")
-    # 이온 주입 공정 종료
-    def ionlmplantationEnd( self, processValue):
-        self.__checkProcess( 3, "end", "ionlmplantation", processValue)
+        case Step.stop_rail_1:
+            if( pass_or_fail1 == GuideMotorStep.fail ):
+                sleep(5)  # 5초 동안 대기
+            else:
+                sleep(8) 
 
-    # 후공정 시작 
-    def metalWiringStart( self ):
-        self.__checkProcess( 4, "start", "metalWiring", "0")
-    # 후공정 종료
-    def metalWiringEnd( self, processValue):
-        self.__checkProcess( 4, "end", "metalWiring", processValue) 
-    
+            motor.stopConveyor()  # 모터를 정지시킴
+            current_step = Step.end_time
 
-    # 1~4 차 제조 공정 후 불량품 구분을 위한 센서값 전송 (Post)
-    def __checkProcess( self, idx, processCmd, processName, processValue):
-        p = ProcessModel()
-        p.processCmd = processCmd
-        p.processName = processName
-        p.processValue = processValue
-
-        res = self.ProcessRequestPost( f'/pi/process/{idx}', p )
-
-        return res
+        case Step.end_time:
+            detect_reply = server_comm.confirmationObject(4, FOURTH_IR)
+            current_step = Step.start

@@ -47,7 +47,7 @@ sensor = Sensor()   #센서 참조
 server_comm = ServerComm()  #서버참조
 svmotor_1 = Motor(SERVO_MOTOR_1_PIN,50) # 주파수 50Hz
 svmotor_2 = Motor(SERVO_MOTOR_2_PIN,50)
-motor = Motor
+motor = Motor # DC모터
 
 while running:
     print( "running : " + str( running ) )# 디버깅확인용
@@ -98,10 +98,8 @@ while running:
             end_light = server_comm.metalWiringStart(light_value)
             if(end_light == "fail"):
                 pass_or_fail1 = GuideMotorStep.fail
-                pass_or_fail2 = GuideMotorStep.reset
-            
+                pass_or_fail2 = GuideMotorStep.reset  
             else:
-
                 if (end_light == "left"):
                     pass_or_fail2 = GuideMotorStep.badGrade
                     pass_or_fail1 = GuideMotorStep.good
@@ -109,7 +107,8 @@ while running:
                     pass_or_fail2 = GuideMotorStep.goodGrade # 여기까지가 서브모터 2부분
                     pass_or_fail1 = GuideMotorStep.good
             svmotor_1.doGuidemotor(pass_or_fail1)
-            svmotor_2.doGuidemotor(pass_or_fail2)       
+            svmotor_2.doGuidemotor(pass_or_fail2)   
+            currnet_step = Step.go_rail_next_1
 
         case Step.go_rail_next_1:
             print( Step.go_rail_next_1 )

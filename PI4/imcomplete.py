@@ -24,13 +24,13 @@ from motor import Motor, GuideMotorStep
 class Step( Enum ) :    #각 스텝별 이름, 동사형으로 지을것, 무엇을 하는 스텝인지 알 수 있는 네이밍
     
     start = 0
-    fourth_part_irsensor_post = 10
-    fourth_part_process_start = 20
-    fourth_part_process_sleep = 30
-    fourth_part_sensor_measure_and_endpost = 40 ##여기서는 4공정 정보를 false,left,right 값을 받고 
-    go_rail_next_1 = 60
-    stop_rail_1 = 70
-    end_time = 80
+    fourth_part_irsensor_post = 11
+    fourth_part_process_start = 22
+    fourth_part_process_sleep = 33
+    fourth_part_sensor_measure_and_endpost = 44 ##여기서는 4공정 정보를 false,left,right 값을 받고 
+    go_rail_next_1 = 55
+    stop_rail_1 = 66
+    end_time =77
 
 pass_or_fail1 = ''
 pass_or_fail2 = ''
@@ -61,7 +61,7 @@ while running:
             #시작하기전에 검사할것들: 통신확인여부, 모터정렬, 센서 검수
             currnet_step = Step.fourth_part_irsensor_post #다음스텝으로 이동sd
 
-        case Step.fourth_part_irsensor_post:  #3번째 
+        case Step.fourth_part_irsensor_post:  
             print( Step.fourth_part_irsensor_post )
             #서버에서 적외선 센서 감지 여부 전송
             detect_reply = server_comm.confirmationObject(4, FOURTH_IR)
@@ -104,7 +104,7 @@ while running:
                     pass_or_fail2 = GuideMotorStep.badGrade
                     pass_or_fail1 = GuideMotorStep.good
                 elif (end_light == "right"):
-                    pass_or_fail2 = GuideMotorStep.goodGrade # 여기까지가 서브모터 2부분
+                    pass_or_fail2 = GuideMotorStep.goodGrade
                     pass_or_fail1 = GuideMotorStep.good
             svmotor_1.doGuidemotor(pass_or_fail1)
             svmotor_2.doGuidemotor(pass_or_fail2)   

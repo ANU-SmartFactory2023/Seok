@@ -136,6 +136,7 @@ while running:
             server_reply = server_comm.notifyProcessEnd()
             if server_reply == "ok":
                 print("Process completed successfully.")
+                current_step = Step.start
             else:
                 print("Error:Process completion confirmation failed.")
-                running = False
+                current_step = Step.end_time

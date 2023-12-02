@@ -22,12 +22,13 @@ from sensor import Sensor
 from motor import Motor, GuideMotorStep
 
 class Step( Enum ) :    #각 스텝별 이름, 동사형으로 지을것, 무엇을 하는 스텝인지 알 수 있는 네이밍
-    
+     
     start = 0
     fourth_part_irsensor_post = 11
     fourth_part_process_start = 22
     fourth_part_process_sleep = 33
-    fourth_part_sensor_measure_and_endpost = 44 ##여기서는 4공정 정보를 false,left,right 값을 받고 
+    fourth_part_sensor_measure_and_endpost = 44
+    move_servo = 45
     go_rail_next_1 = 55
     stop_rail_1 = 66
     end_time =77
@@ -53,13 +54,13 @@ while running:
     print( "running : " + str( running ) )# 디버깅확인용
     sleep( 0.1 )
     FOURTH_IR = sensor.get_ir_sensor( IR_SENSOR_PIN )  ##마지막에 활용
-    match currnet_step :
+    match current_step :
         case Step.start: 
             print( Step.start )
             svmotor_2.doGuideMotor( GuideMotorStep.stop )
             svmotor_1.doGuideMotor( GuideMotorStep.stop )
             #시작하기전에 검사할것들: 통신확인여부, 모터정렬, 센서 검수
-            currnet_step = Step.fourth_part_irsensor_post #다음스텝으로 이동sd
+            current_step = Step.fourth_part_irsensor_post #다음스텝으로 이동sd
 
         case Step.fourth_part_irsensor_post:  
             print( Step.fourth_part_irsensor_post )
@@ -74,7 +75,7 @@ while running:
 
         case Step.fourth_part_process_start:  #계산함수 시작조건 - 센서감지
             print( Step.fourth_part_process_start )
-            start_reply = server_comm.metalWiringStart() 
+            start_reply = server_comm.metalWiringand() 
             # 조도센서가 임무를 수행   
             # 답변 중 msg 변수에 "ok" 를 확인할 시
             if( start_reply == "ok"):
@@ -95,7 +96,7 @@ while running:
             #조도센서값을 판단
             light_value = sensor.get_light_sensor()
             #조도센서 값을 서버에 전송
-            end_light = server_comm.metalWiringStart(light_value)
+            end_light = server_comm.metalWiringAnd(light_value)
             if(end_light == "fail"):
                 pass_or_fail1 = GuideMotorStep.fail
                 pass_or_fail2 = GuideMotorStep.reset  
@@ -105,24 +106,36 @@ while running:
                     pass_or_fail1 = GuideMotorStep.good
                 elif (end_light == "right"):
                     pass_or_fail2 = GuideMotorStep.goodGrade
-                    pass_or_fail1 = GuideMotorStep.good
+                    pass_or_fail1 = GuideMotorStep.good            
+            current_step = Step.move_servo
+
+        case Step.move_servo:
+            print(Step.move_servo)
             svmotor_1.doGuidemotor(pass_or_fail1)
-            svmotor_2.doGuidemotor(pass_or_fail2)   
-            currnet_step = Step.go_rail_next_1
+            svmotor_2.doGuidemotor(pass_or_fail2)  
+            current_step = Step.go_rail_next_1
 
         case Step.go_rail_next_1:
-            print( Step.go_rail_next_1 )
-            motor.doConveyor()        
-            currnet_step = Step.end_time
-
+            print(Step.go_rail_next_1)
+            if pass_or_fail1 == GuideMotorStep.fail:
+                motor.doConveyor()  # 모터를 구동시킴
+                sleep(5)  # 5초 동안 대기
+                motor.StopConveyor()  # 모터를 정지시킴
+                detect_reply = server_comm.confirmationObject(4, FOURTH_IR)
+                current_step = Step.start
+            else:
+                motor.doConveyor()  # 모터를 구동시킴 (다른 경우에는 8초간 구동하도록 설정된 것과 동일)
+                sleep(8)  
+                motor.StopConveyor()  # 모터를 정지시킴
+                detect_reply = server_comm.confirmationObject(4, FOURTH_IR)
+                current_step = Step.end_time
+    
+        #적외선 센서 값이 1에서 0이 되었을떄 sleep 이후에 서버에 ir값을 보내주면 서버에서 ok 끝
         case Step.end_time:
             print (Step.end_time)
             server_reply = server_comm.notifyProcessEnd()
             if server_reply == "ok":
                 print("Process completed successfully.")
-                motor.stopConveyor()
-                current_step = Step.end
             else:
                 print("Error:Process completion confirmation failed.")
                 running = False
-            

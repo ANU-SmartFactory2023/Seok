@@ -28,12 +28,12 @@ pass_or_fail1 = ''
 pass_or_fail2 = ''
 
 # GPIO 핀 번호 설정
-LIGHT_SENSOR_PIN = 6
+LIGHT_SENSOR_PIN = 16
 LIGHT_IR_SENSOR_PIN = 7
 SERVO_MOTOR_1_PIN = 17
 SERVO_MOTOR_2_PIN = 18
 
-currnet_step = Step.start   #기본설정
+current_step = Step.start   #기본설정
 running = True  
 ir_sensor = InfraredSensor( LIGHT_IR_SENSOR_PIN )   #센서 참조
 light_sensor = LightSensor( LIGHT_SENSOR_PIN )

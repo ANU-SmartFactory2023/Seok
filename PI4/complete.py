@@ -1,4 +1,3 @@
-import PRi.GPIO as GPIO
 from enum import Enum
 import os
 from time import sleep
@@ -33,13 +32,6 @@ LIGHT_IR_SENSOR_PIN = 7
 SERVO_MOTOR_1_PIN = 17
 SERVO_MOTOR_2_PIN = 18
 
-# GPIO 초기화
-GPIO.setmode(GPIO.BCM)
-GPIO.setup(LIGHT_SENSOR_PIN, GPIO.IN)
-GPIO.setup(LIGHT_IR_SENSOR_PIN, GPIO.IN)
-GPIO.setup(SERVO_MOTOR_1_PIN, GPIO.OUT)
-GPIO.setup(SERVO_MOTOR_2_PIN, GPIO.OUT)
-
 current_step = Step.start   #기본설정
 running = True  
 ir_sensor = InfraredSensor( LIGHT_IR_SENSOR_PIN )   #센서 참조
@@ -60,10 +52,9 @@ while running:
             servo_motor_1.doGuideMotor( GuideMotorStep.stop )
             #시작하기전에 검사할것들: 통신확인여부, 모터정렬, 센서 검수
             current_step = Step.fourth_part_irsensor_post #다음스텝으로 이동sd
-            
+
         case Step.fourth_part_irsensor_post:  
             print( Step.fourth_part_irsensor_post )
-            GPIO.cleanup()
 
             if( FOURTH_IR == 1 ) :
                 #서버에서 적외선 센서 감지 여부 전송

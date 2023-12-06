@@ -7,7 +7,7 @@ import random
 import sys, os
 from enum import Enum
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
-from common.moter import Motor, GuideMotorStep
+from common.motor import Motor, GuideMotorStep
 from common.sensor import Sensor
 from common.server_communication import ServerComm
 

@@ -44,11 +44,6 @@ GPIO.setup(SERVO_MOTOR_2_PIN, GPIO.OUT)
 def signal_handler(sig, frame):
     print('프로그램을 종료합니다.')
     GPIO.cleanup()
-    GPIO.setmode(GPIO.BCM)
-    GPIO.setup(LIGHT_SENSOR_PIN, GPIO.IN)
-    GPIO.setup(LIGHT_IR_SENSOR_PIN, GPIO.IN)
-    GPIO.setup(SERVO_MOTOR_1_PIN, GPIO.OUT)
-    GPIO.setup(SERVO_MOTOR_2_PIN, GPIO.OUT)
     sys.exit(0)
 
 # SIGINT 신호(Ctrl+C)에 대한 핸들러 등록
